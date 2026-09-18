@@ -12,9 +12,9 @@ Responsável por gerar os dados sintéticos, treinar as parametrizações do Neu
 
 **Para rodar:**
 1. Navegue até a pasta: `cd backend-python`
-2. Instale as dependências: `pip install -r requirements.txt`
-3. Gere a base de dados sintética com a flag de comorbidade (5 anos de histórico): `python scripts/generate_synthetic_data.py`
-4. Rode a API do FastAPI: `uvicorn main:app --reload`
+2. Instale as dependências: `py -3.12 -m pip install -r requirements.txt`
+3. Gere a base de dados sintética com a flag de comorbidade (5 anos de histórico): `py -3.12 scripts/generate_synthetic_data.py`
+4. Rode a API do FastAPI: `py -3.12 -m uvicorn main:app --reload`
 5. Acesse a documentação interativa e os endpoints em: `http://127.0.0.1:8000/docs`
 
 ### 2. `backend-csharp/` (API de Consumo para o Front-end)
