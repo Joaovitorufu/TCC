@@ -1,0 +1,17 @@
+# C#
+bin/
+obj/
+.vs/
+*.user
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+venv/
+env/
+.venv/
+
+# General
+.DS_Store

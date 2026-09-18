@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+neuralprophet
+sqlalchemy
+pandas
+Faker
+python-dateutil
+pydantic
