@@ -31,11 +31,9 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Removida a trava de ambiente para o Swagger sempre funcionar, mesmo executando o .exe direto
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
@@ -43,19 +41,16 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-if (app.Environment.IsDevelopment())
+app.Lifetime.ApplicationStarted.Register(() =>
 {
-    app.Lifetime.ApplicationStarted.Register(() =>
+    try
     {
-        try
-        {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://localhost:5001/swagger") { UseShellExecute = true });
-        }
-        catch (Exception)
-        {
-            // Ignora erro silenciosamente caso não consiga abrir o navegador
-        }
-    });
-}
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://localhost:5001/swagger") { UseShellExecute = true });
+    }
+    catch (Exception)
+    {
+        // Ignora erro silenciosamente caso não consiga abrir o navegador
+    }
+});
 
 app.Run();
