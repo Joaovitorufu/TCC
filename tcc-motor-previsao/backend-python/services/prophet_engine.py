@@ -49,7 +49,7 @@ def train_and_forecast(db: Session):
     print("Treinando Parametrização 1: Modelo Básico...")
     df_basic = fetch_data_for_prophet(db, use_comorbidity_as_regressor=False)
     if df_basic is not None:
-        m1 = NeuralProphet(epochs=50) # Epochs reduzidas para não demorar muito no TCC local
+        m1 = NeuralProphet(epochs=50, learning_rate=0.1) # LR fixo para evitar erro do PyTorch 2.6
         metrics1 = m1.fit(df_basic, freq='D')
         future1 = m1.make_future_dataframe(df_basic, periods=30)
         forecast1 = m1.predict(future1)
@@ -68,7 +68,7 @@ def train_and_forecast(db: Session):
     # Parametrização 2: Modelo com Tendência Mais Flexível
     print("Treinando Parametrização 2: Alta Flexibilidade de Tendência...")
     if df_basic is not None:
-        m2 = NeuralProphet(n_changepoints=100, trend_reg=0.05, epochs=50)
+        m2 = NeuralProphet(n_changepoints=100, trend_reg=0.05, epochs=50, learning_rate=0.1)
         metrics2 = m2.fit(df_basic, freq='D')
         future2 = m2.make_future_dataframe(df_basic, periods=30)
         forecast2 = m2.predict(future2)
@@ -87,17 +87,19 @@ def train_and_forecast(db: Session):
     print("Treinando Parametrização 3: Uso de Comorbidade como Regressor...")
     df_comorb = fetch_data_for_prophet(db, use_comorbidity_as_regressor=True)
     if df_comorb is not None:
-        m3 = NeuralProphet(epochs=50)
+        m3 = NeuralProphet(epochs=50, learning_rate=0.1)
         m3.add_future_regressor("comorb_count")
         
         metrics3 = m3.fit(df_comorb, freq='D')
         
         # Para prever com um regressor futuro, precisamos fornecer os valores dele no futuro.
         # Simulando que a média de casos com comorbidade se mantenha no futuro.
-        future3 = m3.make_future_dataframe(df_comorb, periods=30)
-        # Preenche os 30 dias futuros com a media móvel recente do regressor
         mean_comorb = df_comorb['comorb_count'].tail(30).mean()
-        future3['comorb_count'] = mean_comorb
+        last_date = df_comorb['ds'].max()
+        future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=30, freq='D')
+        regressors_df = pd.DataFrame({'ds': future_dates, 'comorb_count': mean_comorb})
+        
+        future3 = m3.make_future_dataframe(df_comorb, regressors_df=regressors_df, periods=30)
         
         forecast3 = m3.predict(future3)
         
