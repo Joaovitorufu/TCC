@@ -12,11 +12,11 @@ from models.hospital_record import HospitalRecord
 
 fake = Faker('pt_BR')
 
-# Recria as tabelas (Atenção: vai apagar os dados antigos)
-Base.metadata.drop_all(bind=engine)
-Base.metadata.create_all(bind=engine)
-
 def generate_data(num_records=5000):
+    # Recria as tabelas (Atenção: vai apagar os dados antigos)
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
     db = SessionLocal()
     records = []
 
@@ -30,17 +30,30 @@ def generate_data(num_records=5000):
     print("Gerando dados sintéticos. Isso pode demorar um pouco...")
 
     for _ in range(num_records):
-        # Gera uma data aleatória nesses 5 anos
-        random_days = random.randrange(delta.days)
-        admission = start_date + timedelta(days=random_days)
+        # Para simular surtos reais, vamos concentrar uma parte dos dados em anos de pico (ex: 2022 e 2024)
+        if random.random() < 0.25: # 25% do volume total é injetado nos períodos de surto
+            outbreak_year = random.choice([2022, 2024])
+            # Surtos intensos geralmente ocorrem entre Fevereiro e Maio (meses 2 a 5)
+            admission = datetime(outbreak_year, random.randint(2, 5), random.randint(1, 28))
+        else:
+            # Distribuição normal ao longo dos 5 anos
+            random_days = random.randrange(delta.days)
+            admission = start_date + timedelta(days=random_days)
         
-        # Aumentar a chance de dengue nos meses de surto (Jan a Maio)
+        # Identifica se a data caiu em um período de surto intenso
+        is_outbreak = admission.year in [2022, 2024] and admission.month in [2, 3, 4, 5]
         is_dengue_season = admission.month in [1, 2, 3, 4, 5]
         
-        # 60% dos casos simulados serão Dengue durante a temporada, 20% fora da temporada
-        chance_dengue = 0.6 if is_dengue_season else 0.2
+        # Ajusta a probabilidade de ser Dengue com base no período
+        if is_outbreak:
+            chance_dengue = 0.90 # 90% das internações são por Dengue no pico do surto
+        elif is_dengue_season:
+            chance_dengue = 0.50 # 50% de chance na temporada regular
+        else:
+            chance_dengue = 0.15 # Baixa chance fora de temporada
+            
         is_dengue = random.random() < chance_dengue
-        disease = "Dengue" if is_dengue else random.choice(["Infeccao Respiratoria", "Problema Cardiovascular", "Trauma", "Outros"])
+        disease = "Dengue" if is_dengue else random.choice(["Infecção Respiratória", "Problema Cardiovascular", "Trauma", "Outros"])
         
         # A idade agora influencia na gravidade (Idosos > 65 anos e crianças < 5 anos são mais vulneráveis)
         age = random.randint(0, 95)
@@ -64,14 +77,14 @@ def generate_data(num_records=5000):
         if severity_score >= 5:
             severity = "Grave"
         elif severity_score >= 3:
-            severity = "Moderado"
+            severity = "Moderada"
         else:
             severity = "Leve"
             
         # O tempo de internação agora é diretamente proporcional à severidade calculada
         if severity == "Grave":
             length_of_stay = random.randint(7, 20)
-        elif severity == "Moderado":
+        elif severity == "Moderada":
             length_of_stay = random.randint(3, 7)
         else:
             length_of_stay = random.randint(1, 3)
@@ -79,16 +92,15 @@ def generate_data(num_records=5000):
         discharge = admission + timedelta(days=length_of_stay)
 
         record = HospitalRecord(
-            patient_name=fake.name(),
-            age=age,
-            gender=random.choice(["M", "F"]),
-            zip_code=fake.postcode(),
-            admission_date=admission.date(),
-            discharge_date=discharge.date(),
-            length_of_stay=length_of_stay,
-            disease=disease,
-            severity=severity,
-            has_comorbidity=has_comorbidity
+            nome_paciente=fake.name(),
+            idade=age,
+            sexo=random.choice(["M", "F"]),
+            data_internacao=admission.date(),
+            data_alta=discharge.date(),
+            tempo_internacao=length_of_stay,
+            doenca=disease,
+            severidade=severity,
+            possui_comorbidade=has_comorbidity
         )
         records.append(record)
         

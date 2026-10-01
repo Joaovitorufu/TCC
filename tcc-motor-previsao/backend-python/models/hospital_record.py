@@ -2,16 +2,15 @@ from sqlalchemy import Column, Integer, String, Date, Boolean
 from database import Base
 
 class HospitalRecord(Base):
-    __tablename__ = "hospital_records"
+    __tablename__ = "registros_hospitalares"
 
     id = Column(Integer, primary_key=True, index=True)
-    patient_name = Column(String, index=True)
-    age = Column(Integer)
-    gender = Column(String)
-    zip_code = Column(String)
-    admission_date = Column(Date, index=True)
-    discharge_date = Column(Date, nullable=True)
-    length_of_stay = Column(Integer, nullable=True)
-    disease = Column(String, index=True)
-    severity = Column(String)
-    has_comorbidity = Column(Boolean, default=False)
+    nome_paciente = Column(String, index=True)
+    idade = Column(Integer)
+    sexo = Column(String)
+    data_internacao = Column(Date, index=True)
+    data_alta = Column(Date, nullable=True)
+    tempo_internacao = Column(Integer, nullable=True)
+    doenca = Column(String, index=True)
+    severidade = Column(String)
+    possui_comorbidade = Column(Boolean, default=False)
